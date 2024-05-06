@@ -7,7 +7,7 @@ namespace BubberBreakfast.Models;
 public class Breakfast : BaseModel
 {
     [PrimaryKey("id", false)]
-    public Guid Id { get; }
+    public Guid Id { get; set; }
 
     [Column("Name")]
     public string Name { get; set; }

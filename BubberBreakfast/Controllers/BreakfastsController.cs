@@ -32,9 +32,8 @@ public class BreakfastsController : ControllerBase
         };
 
         var breakfastId = await _breakfastService.CreateBreakfast(breakfast);
-        Console.WriteLine(breakfastId);
         var response = new BreakfastResponse(
-            breakfast.Id,
+            breakfastId,
             breakfast.Name,
             breakfast.Description,
             breakfast.StartDateTime,
@@ -44,7 +43,7 @@ public class BreakfastsController : ControllerBase
             breakfast.Sweet);
         return CreatedAtAction(
             actionName: nameof(GetBreakfast),
-            routeValues: new { id = breakfast.Id},
+            routeValues: new { id = breakfastId },
             value: response);
     }
 
@@ -52,6 +51,11 @@ public class BreakfastsController : ControllerBase
     public async Task<IActionResult> GetBreakfast(Guid id)
     {
         var breakfast = await _breakfastService.GetBreakfast(id);
+
+        if (breakfast == null)
+        {
+            return NotFound();
+        }
 
         var response = new BreakfastResponse(
                 breakfast.Id,
@@ -68,14 +72,28 @@ public class BreakfastsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    public IActionResult UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
+    public async Task<IActionResult> UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
     {
-        return Ok(request);
+        var breakfast = new Breakfast()
+        {
+            Id = id,
+            Name = request.Name,
+            Description = request.Description,
+            StartDateTime = request.StartDateTime,
+            EndDateTime = request.EndDateTime,
+            LastTimeModified = DateTime.UtcNow,
+            Savory = request.Savory,
+            Sweet = request.Sweet,
+        };
+
+        await _breakfastService.UpsertBreakfast(breakfast);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
-    public IActionResult DeleteBreakfast(Guid id)
+    public async Task<IActionResult> DeleteBreakfast(Guid id)
     {
-        return Ok(id);
+        await _breakfastService.DeleteBreakfast(id);
+        return NoContent();
     }
 }
