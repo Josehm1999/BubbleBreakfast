@@ -1,4 +1,6 @@
 using BubberBreakfast.Models;
+using BubberBreakfast.ServiceErros;
+using ErrorOr;
 
 namespace BubberBreakfast.Services.Breakfasts;
 
@@ -19,10 +21,19 @@ public class BreakFastService : IBreakfastService
         return newBreakfast.Id;
     }
 
-    public async Task<Breakfast> GetBreakfast(Guid id)
+    public async Task<ErrorOr<Breakfast>> GetBreakfast(Guid id)
     {
-        var response = await _client.From<Breakfast>().Where(n => n.Id == id).Get();
-        return response.Models.FirstOrDefault();
+
+        var response = await _client.From<Breakfast>()
+            .Where(n => n.Id == id)
+            .Get();
+
+        if (response.Model is null)
+        {
+            return Errors.Breakfast.Notfound;
+        }
+
+        return response.Model;
     }
 
     public async Task DeleteBreakfast(Guid id)

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using BubberBreakfast.Contracts.Breakfast;
 using BubberBreakfast.Models;
 using BubberBreakfast.Services.Breakfasts;
+using ErrorOr;
+using BubberBreakfast.ServiceErros;
 
 namespace BubberBreakfast.Controllers;
 
@@ -50,12 +52,13 @@ public class BreakfastsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetBreakfast(Guid id)
     {
-        var breakfast = await _breakfastService.GetBreakfast(id);
+        ErrorOr<Breakfast> getBreakfastResult = await _breakfastService.GetBreakfast(id);
 
-        if (breakfast == null)
+        if (getBreakfastResult.IsError && getBreakfastResult.FirstError == Errors.Breakfast.Notfound)
         {
             return NotFound();
         }
+        var breakfast = getBreakfastResult.Value;
 
         var response = new BreakfastResponse(
                 breakfast.Id,

@@ -8,7 +8,9 @@ public static class Errors
 
     public static class Breakfast
     {
-        public static Error Notfound;
+        public static Error Notfound => Error.NotFound(
+            code: "Breakfast.NotFound",
+            description: "Breakfast not found");
     }
 
 }
