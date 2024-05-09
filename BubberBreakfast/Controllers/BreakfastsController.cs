@@ -4,6 +4,7 @@ using BubberBreakfast.Models;
 using BubberBreakfast.Services.Breakfasts;
 using ErrorOr;
 using BubberBreakfast.ServiceErros;
+using UBL21;
 
 namespace BubberBreakfast.Controllers;
 
@@ -74,6 +75,12 @@ public class BreakfastsController : ControllerBase
         return Ok(response);
     }
 
+    // public async IActionResult GetInvoice()
+    // {
+    //     var invoice = new UBL21.InvoiceType();
+    //
+    //     return void;
+    // }
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
     {
