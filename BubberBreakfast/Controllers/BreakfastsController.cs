@@ -40,6 +40,11 @@ public class BreakfastsController : ApiController
             return Problem(createBreakfastResult.Errors);
         }
 
+        return CreateAsGetBreakfast(breakfast);
+    }
+
+    private CreatedAtActionResult CreateAsGetBreakfast(Breakfast breakfast)
+    {
         return CreatedAtAction(
             actionName: nameof(GetBreakfast),
             routeValues: new { id = breakfast.Id },
@@ -86,10 +91,14 @@ public class BreakfastsController : ApiController
             Sweet = request.Sweet,
         };
 
-       ErrorOr<Updated> updatedResult = await _breakfastService.UpsertBreakfast(breakfast);
-       // updatedResult.Match(
-       //         updated =>
-       //         )
+        ErrorOr<UpsertBreakfastResult> updatedResult = await _breakfastService.UpsertBreakfast(breakfast);
+
+        // updatedResult.Match(
+        //         newEntry =>
+        //         );
+        // updatedResult.Match(
+        //         updated =>
+        //         )
         return NoContent();
     }
 

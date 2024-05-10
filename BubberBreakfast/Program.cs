@@ -18,8 +18,6 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddSingleton<IBreakfastService, BreakFastService>();
 }
 
-
-
 var app = builder.Build();
 {
     if (app.Environment.IsDevelopment())
