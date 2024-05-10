@@ -8,9 +8,7 @@ using UBL21;
 
 namespace BubberBreakfast.Controllers;
 
-[ApiController]
-[Route("[controller]")]
-public class BreakfastsController : ControllerBase
+public class BreakfastsController : ApiController
 {
     private readonly IBreakfastService _breakfastService;
 
@@ -34,9 +32,25 @@ public class BreakfastsController : ControllerBase
             Sweet = request.Sweet
         };
 
-        var breakfastId = await _breakfastService.CreateBreakfast(breakfast);
-        var response = new BreakfastResponse(
-            breakfastId,
+        ErrorOr<Created> createBreakfastResult = await _breakfastService.CreateBreakfast(breakfast);
+
+
+        if (createBreakfastResult.IsError)
+        {
+            return Problem(createBreakfastResult.Errors);
+        }
+
+        return CreatedAtAction(
+            actionName: nameof(GetBreakfast),
+            routeValues: new { id = breakfast.Id },
+            value: MapBreakfastResponse(breakfast)
+        );
+    }
+
+    private static BreakfastResponse MapBreakfastResponse(Breakfast breakfast)
+    {
+        return new BreakfastResponse(
+            breakfast.Id,
             breakfast.Name,
             breakfast.Description,
             breakfast.StartDateTime,
@@ -44,10 +58,6 @@ public class BreakfastsController : ControllerBase
             breakfast.LastTimeModified,
             breakfast.Savory,
             breakfast.Sweet);
-        return CreatedAtAction(
-            actionName: nameof(GetBreakfast),
-            routeValues: new { id = breakfastId },
-            value: response);
     }
 
     [HttpGet("{id:guid}")]
@@ -55,32 +65,12 @@ public class BreakfastsController : ControllerBase
     {
         ErrorOr<Breakfast> getBreakfastResult = await _breakfastService.GetBreakfast(id);
 
-        if (getBreakfastResult.IsError && getBreakfastResult.FirstError == Errors.Breakfast.Notfound)
-        {
-            return NotFound();
-        }
-        var breakfast = getBreakfastResult.Value;
-
-        var response = new BreakfastResponse(
-                breakfast.Id,
-                breakfast.Name,
-                breakfast.Description,
-                breakfast.StartDateTime,
-                breakfast.EndDateTime,
-                breakfast.LastTimeModified,
-                breakfast.Savory,
-                breakfast.Sweet
-                );
-
-        return Ok(response);
+        return getBreakfastResult.Match(
+                    breakfast => Ok(MapBreakfastResponse(breakfast)),
+                    errors => Problem(errors)
+                    );
     }
 
-    // public async IActionResult GetInvoice()
-    // {
-    //     var invoice = new UBL21.InvoiceType();
-    //
-    //     return void;
-    // }
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
     {
@@ -96,14 +86,21 @@ public class BreakfastsController : ControllerBase
             Sweet = request.Sweet,
         };
 
-        await _breakfastService.UpsertBreakfast(breakfast);
+       ErrorOr<Updated> updatedResult = await _breakfastService.UpsertBreakfast(breakfast);
+       // updatedResult.Match(
+       //         updated =>
+       //         )
         return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteBreakfast(Guid id)
     {
-        await _breakfastService.DeleteBreakfast(id);
-        return NoContent();
+        ErrorOr<Deleted> deletedResult = await _breakfastService.DeleteBreakfast(id);
+
+        return deletedResult.Match(
+                deleted => NoContent(),
+                errors => Problem(errors)
+        );
     }
 }

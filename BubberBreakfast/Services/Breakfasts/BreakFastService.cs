@@ -1,6 +1,7 @@
 using BubberBreakfast.Models;
 using BubberBreakfast.ServiceErros;
 using ErrorOr;
+using Postgrest;
 
 namespace BubberBreakfast.Services.Breakfasts;
 
@@ -14,11 +15,10 @@ public class BreakFastService : IBreakfastService
         _client = client;
     }
 
-    public async Task<Guid> CreateBreakfast(Breakfast breakfast)
+    public async Task<ErrorOr<Created>> CreateBreakfast(Breakfast breakfast)
     {
-        var response = await _client.From<Breakfast>().Insert(breakfast);
-        var newBreakfast = response.Models.First();
-        return newBreakfast.Id;
+        await _client.From<Breakfast>().Insert(breakfast);
+        return Result.Created;
     }
 
     public async Task<ErrorOr<Breakfast>> GetBreakfast(Guid id)
@@ -36,16 +36,22 @@ public class BreakFastService : IBreakfastService
         return response.Model;
     }
 
-    public async Task DeleteBreakfast(Guid id)
+    public async Task<ErrorOr<Deleted>> DeleteBreakfast(Guid id)
     {
         await _client.From<Breakfast>()
                      .Where(b => b.Id == id)
                      .Delete();
+
+        return Result.Deleted;
     }
 
-    public async Task UpsertBreakfast(Breakfast breakfast)
+    public async Task<ErrorOr<UpsertBreakfastResult>> UpsertBreakfast(Breakfast breakfast)
     {
-        await _client.From<Breakfast>()
-                     .Upsert(breakfast);
+        var response = await _client.From<Breakfast>()
+                                    .Upsert(breakfast, new QueryOptions { Count = QueryOptions.CountType.Exact });
+        var isNewlyCreated = response.ResponseMessage.StatusCode == System.Net.HttpStatusCode.Created ? true : false;
+
+
+        return new UpsertBreakfastResult(isNewlyCreated);
     }
 }
